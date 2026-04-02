@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FIFA World Cup 2026 Scheduler</title>
+    <meta name="description"
+        content="Plan your FIFA World Cup 2026 experience — track teams, explore stadiums, follow matches, and build your personalized viewing schedule.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@400;600;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="home.css">
+</head>
+
+<body>
+
+    <!-- Navigation Bar -->
+    <nav id="main-nav">
+        <a href="#" class="nav-brand" id="tab-wcs">WCS</a>
+        <ul class="nav-links">
+            <li><a href="#teams" id="tab-teams">Teams</a></li>
+            <li><a href="#stadium" id="tab-stadium">Stadium</a></li>
+            <li><a href="#matches" id="tab-matches">Matches</a></li>
+            <li><a href="#scheduler" id="tab-scheduler">Scheduler</a></li>
+            <li><a href="#watchlist" id="tab-watchlist">Watchlist</a></li>
+        </ul>
+    </nav>
+
+    <!-- Central Logo -->
+    <div class="logo-wrapper" id="center-logo">
+        <img src="logo.png" alt="FIFA World Cup 2026 Logo">
+    </div>
+
+    <!-- Navigation interactivity -->
+    <script>
+        const navLinks = document.querySelectorAll('.nav-links a');
+        navLinks.forEach(link => {
+            link.addEventListener('click', function (e) {
+                e.preventDefault();
+                navLinks.forEach(l => l.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+    </script>
+</body>
+
+</html>

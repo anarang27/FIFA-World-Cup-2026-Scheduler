@@ -1,0 +1,203 @@
+/* FIFA World Cup 2026 Scheduler — home.css */
+
+/* Font Ultimate */
+@font-face {
+    font-family: 'Ultimate';
+    src: url('fonts/Ultimate.otf') format('opentype'),
+         url('fonts/Ultimate.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Base */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Outfit', sans-serif;
+}
+
+html, body {
+    height: 100%;
+    overflow: hidden;
+}
+
+/* World Cup 2026 Colors */
+:root {
+    --lime:     #c3ec0b;
+    --green:    #00c053;
+    --dkgreen:  #00503e;
+    --orange:   #ff4b00;
+    --red:      #d10000;
+    --maroon:   #6f000b;
+    --ltblue:   #85b9ff;
+    --blue:     #244efe;
+    --dkblue:   #0c1b9b;
+    --stripe:   6.4vmin;
+}
+
+/* Animation of the circular stripes */
+
+@property --stripe-offset {
+    syntax: '<length>';
+    initial-value: 0px;
+    inherits: false;
+}
+
+body {
+    animation: radiate 11s linear infinite;
+
+    background: repeating-radial-gradient(
+        circle at 50% 50%,
+
+        var(--lime)    calc(var(--stripe) * 0 + var(--stripe-offset)),
+        var(--lime)    calc(var(--stripe) * 1 + var(--stripe-offset)),
+        var(--green)   calc(var(--stripe) * 1 + var(--stripe-offset)),
+        var(--green)   calc(var(--stripe) * 2 + var(--stripe-offset)),
+        var(--dkgreen) calc(var(--stripe) * 2 + var(--stripe-offset)),
+        var(--dkgreen) calc(var(--stripe) * 3 + var(--stripe-offset)),
+        var(--orange)  calc(var(--stripe) * 3 + var(--stripe-offset)),
+        var(--orange)  calc(var(--stripe) * 4 + var(--stripe-offset)),
+        var(--red)     calc(var(--stripe) * 4 + var(--stripe-offset)),
+        var(--red)     calc(var(--stripe) * 5 + var(--stripe-offset)),
+        var(--maroon)  calc(var(--stripe) * 5 + var(--stripe-offset)),
+        var(--maroon)  calc(var(--stripe) * 6 + var(--stripe-offset)),
+        var(--ltblue)  calc(var(--stripe) * 6 + var(--stripe-offset)),
+        var(--ltblue)  calc(var(--stripe) * 7 + var(--stripe-offset)),
+        var(--blue)    calc(var(--stripe) * 7 + var(--stripe-offset)),
+        var(--blue)    calc(var(--stripe) * 8 + var(--stripe-offset)),
+        var(--dkblue)  calc(var(--stripe) * 8 + var(--stripe-offset)),
+        var(--dkblue)  calc(var(--stripe) * 9 + var(--stripe-offset))
+    );
+}
+
+@keyframes radiate {
+    from { --stripe-offset: 0vmin; }
+    to   { --stripe-offset: 57.6vmin; }
+}
+
+/* Navigation Bar */
+#main-nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 100;
+    background: #000;
+    padding: 0.2rem 1.8rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* WCS Tab */
+.nav-brand {
+    font-family: 'Ultimate', sans-serif;
+    font-size: 4rem;
+    color: #FFD700;
+    text-decoration: none;
+    letter-spacing: 4px;
+    line-height: 1;
+    transition: color 0.25s ease;
+    position: relative;
+}
+
+.nav-brand:hover {
+    color: #fff;
+}
+
+.nav-brand::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 2px;
+    background: #fff;
+    transition: width 0.3s ease;
+}
+
+.nav-brand:hover::after {
+    width: 100%;
+}
+
+.nav-links {
+    display: flex;
+    justify-content: flex-end;
+    gap: 4rem;
+    list-style: none;
+}
+
+.nav-links li a {
+    color: #fff;
+    text-decoration: none;
+    font-family: 'Ultimate', sans-serif;
+    font-size: 1.45rem;
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    padding: 0.5rem 0;
+    position: relative;
+    transition: color 0.25s ease;
+}
+
+/* Underline on hover */
+.nav-links li a::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 2px;
+    background: #FFD700;
+    transition: width 0.3s ease;
+}
+
+.nav-links li a:hover,
+.nav-links li a.active {
+    color: #FFD700;
+}
+
+.nav-links li a:hover::after,
+.nav-links li a.active::after {
+    width: 100%;
+}
+
+/* Central Logo */
+.logo-wrapper {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 10;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    width: 56vmin;
+    height: 56vmin;
+    border-radius: 50%;
+    background: radial-gradient(circle,
+        rgba(0,0,0,1)   0%,
+        rgba(0,0,0,1)   60%,
+        rgba(0,0,0,0)   100%
+    );
+}
+
+.logo-wrapper img {
+    height: 44vmin;
+    width: auto;
+    object-fit: contain;
+    /* Logo Pulse Animation */
+    animation: breathe 4s ease-in-out infinite;
+}
+
+/* Logo Pulse Animation */
+@keyframes breathe {
+    0%, 100% { transform: scale(1); }
+    50%      { transform: scale(1.08); }
+}
