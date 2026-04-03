@@ -7,8 +7,8 @@ document.addEventListener('DOMContentLoaded', () => {
         'tab-teams':     'team.html',
         'tab-stadium':   '#',
         'tab-matches':   '#',
-        'tab-scheduler': '#',
-        'tab-watchlist':  '#'
+        'tab-scheduler': 'scheduler.html',
+        'tab-watchlist': 'watchlist.html'
     };
 
     // Attach click handlers to every nav element

@@ -1,0 +1,318 @@
+/* FIFA World Cup 2026 Scheduler — watchlist.css */
+
+/* Font Ultimate */
+@font-face {
+    font-family: 'Ultimate';
+    src: url('fonts/Ultimate.otf') format('opentype'),
+         url('fonts/Ultimate.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Base */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Outfit', sans-serif;
+}
+
+html, body {
+    min-height: 100%;
+    background: #0a0f1a;
+    color: #f0f0f0;
+}
+
+/* World Cup 2026 Colors */
+:root {
+    --lime:     #c3ec0b;
+    --green:    #00c053;
+    --dkgreen:  #00503e;
+    --orange:   #ff4b00;
+    --red:      #d10000;
+    --maroon:   #6f000b;
+    --ltblue:   #85b9ff;
+    --blue:     #244efe;
+    --dkblue:   #0c1b9b;
+    --gold:     #cfae5f;
+}
+
+/* Navigation Bar */
+#main-nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 100;
+    background: #000;
+    padding: 0.2rem 1.8rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Favorite Team Display */
+.fav-display {
+    font-family: 'Ultimate', sans-serif;
+    font-size: 1.2rem;
+    color: var(--gold);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+}
+
+.fav-display:not(:empty) {
+    opacity: 1;
+}
+
+/* WCS Tab */
+.nav-brand {
+    font-family: 'Ultimate', sans-serif;
+    font-size: 4rem;
+    color: var(--gold);
+    text-decoration: none;
+    letter-spacing: 4px;
+    line-height: 1;
+    transition: color 0.25s ease;
+    position: relative;
+}
+
+.nav-brand:hover { color: #fff; }
+
+.nav-brand::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 2px;
+    background: #fff;
+    transition: width 0.3s ease;
+}
+
+.nav-brand:hover::after { width: 100%; }
+
+.nav-links {
+    display: flex;
+    justify-content: flex-end;
+    gap: 4rem;
+    list-style: none;
+}
+
+.nav-links li a {
+    color: #fff;
+    text-decoration: none;
+    font-family: 'Ultimate', sans-serif;
+    font-size: 1.45rem;
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    padding: 0.5rem 0;
+    position: relative;
+    transition: color 0.25s ease;
+}
+
+.nav-links li a::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 2px;
+    background: var(--gold);
+    transition: width 0.3s ease;
+}
+
+.nav-links li a:hover,
+.nav-links li a.active { color: var(--gold); }
+
+.nav-links li a:hover::after,
+.nav-links li a.active::after { width: 100%; }
+
+/* Page Content */
+.page-content {
+    padding: 7rem 4rem 4rem 4rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.page-title {
+    font-family: 'Ultimate', sans-serif;
+    font-size: 3.5rem;
+    color: var(--gold);
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    margin-bottom: 2rem;
+    text-align: center;
+    text-shadow: 0 2px 12px rgba(207, 174, 95, 0.3);
+}
+
+/* Loading Spinner */
+.loading-spinner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 4rem 0;
+    color: #aaa;
+    font-size: 1.1rem;
+}
+
+.spinner {
+    width: 48px;
+    height: 48px;
+    border: 4px solid rgba(255,255,255,0.1);
+    border-top-color: var(--gold);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Error State */
+.error-msg {
+    text-align: center;
+    padding: 3rem;
+    color: var(--red);
+    font-size: 1.2rem;
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    color: #777;
+    font-size: 1.3rem;
+}
+
+.btn-browse {
+    display: inline-block;
+    margin-top: 1.5rem;
+    font-family: 'Ultimate', sans-serif;
+    font-size: 1.2rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    text-decoration: none;
+    padding: 0.8rem 2rem;
+    border: 2px solid var(--gold);
+    color: var(--gold);
+    border-radius: 8px;
+    transition: all 0.25s ease;
+}
+
+.btn-browse:hover {
+    background: var(--gold);
+    color: #000;
+    box-shadow: 0 4px 16px rgba(207, 174, 95, 0.3);
+}
+
+/* Match List */
+.match-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+/* Match Card */
+.match-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 1.2rem 2rem;
+    transition: all 0.3s ease;
+}
+
+.match-card:hover {
+    background: rgba(207, 174, 95, 0.06);
+    border-color: rgba(207, 174, 95, 0.2);
+}
+
+/* Teams section */
+.match-teams {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    min-width: 300px;
+}
+
+.team-name {
+    font-family: 'Ultimate', sans-serif;
+    font-size: 1.6rem;
+    letter-spacing: 2px;
+    color: #fff;
+}
+
+.vs {
+    font-size: 0.9rem;
+    color: var(--gold);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+/* Details section */
+.match-details {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    color: #999;
+    font-size: 0.95rem;
+}
+
+.match-group {
+    font-family: 'Ultimate', sans-serif;
+    font-size: 1.1rem;
+    color: var(--gold);
+    letter-spacing: 2px;
+}
+
+.match-date, .match-time {
+    white-space: nowrap;
+}
+
+/* Remove Button */
+.btn-remove {
+    font-family: 'Ultimate', sans-serif;
+    font-size: 1rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 0.6rem 1.4rem;
+    border: 2px solid var(--red);
+    background: transparent;
+    color: var(--red);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    white-space: nowrap;
+}
+
+.btn-remove:hover {
+    background: var(--red);
+    color: #fff;
+    box-shadow: 0 4px 16px rgba(209, 0, 0, 0.3);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .page-content { padding: 6rem 1.5rem 2rem 1.5rem; }
+    .page-title { font-size: 2.2rem; }
+    .nav-links { gap: 2rem; }
+
+    .match-card {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .match-teams { min-width: auto; }
+    .match-details { flex-wrap: wrap; gap: 1rem; }
+}
