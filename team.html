@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teams — FIFA World Cup 2026 Scheduler</title>
+    <meta name="description" content="Browse all 48 qualified teams for the FIFA World Cup 2026.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@400;600;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="team.css">
+</head>
+
+<body>
+
+    <!-- Navigation Bar -->
+    <nav id="main-nav">
+        <a href="home.html" class="nav-brand" id="tab-wcs">WCS</a>
+        <span class="fav-display" id="fav-display"></span>
+        <ul class="nav-links">
+            <li><a href="team.html" id="tab-teams" class="active">Teams</a></li>
+            <li><a href="#stadium" id="tab-stadium">Stadium</a></li>
+            <li><a href="#matches" id="tab-matches">Matches</a></li>
+            <li><a href="#scheduler" id="tab-scheduler">Scheduler</a></li>
+            <li><a href="#watchlist" id="tab-watchlist">Watchlist</a></li>
+        </ul>
+    </nav>
+
+    <!-- Page Content -->
+    <main class="page-content">
+        <h1 class="page-title">World Cup 2026 Teams</h1>
+
+        <!-- Loading State -->
+        <div id="loading" class="loading-spinner">
+            <div class="spinner"></div>
+            <p>Loading teams...</p>
+        </div>
+
+        <!-- Error State -->
+        <div id="error" class="error-msg" style="display:none;">
+            <p>⚠ Failed to load teams. Please try again.</p>
+        </div>
+
+        <!-- Teams Table -->
+        <div id="table-wrapper" class="table-wrapper" style="display:none;">
+            <table id="teams-table">
+                <thead>
+                    <tr>
+                        <th id="col-ranking">Ranking</th>
+                        <th id="col-country">Country</th>
+                        <th id="col-teamname">Team Name</th>
+                        <th id="col-favorite">Favorite</th>
+                    </tr>
+                </thead>
+                <tbody id="teams-body">
+                    <!-- Rows inserted by JS -->
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <!-- Scripts -->
+    <script src="config.js"></script>
+    <script src="nav.js"></script>
+    <script>
+        // Supabase helper: standard headers
+        function sbHeaders() {
+            return {
+                'apikey': SUPABASE_ANON_KEY,
+                'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                'Content-Type': 'application/json',
+                'Prefer': 'return=minimal'
+            };
+        }
+
+        // Toggle favorite for a team (only 1 allowed at a time)
+        async function toggleFavorite(teamname, starEl) {
+            const isCurrentlyFav = starEl.classList.contains('filled');
+
+            try {
+                // Step 1: Clear ALL favorites first
+                await fetch(`${SUPABASE_URL}/rest/v1/team?favorite=eq.true`, {
+                    method: 'PATCH',
+                    headers: sbHeaders(),
+                    body: JSON.stringify({ favorite: null })
+                });
+
+                // Update UI: reset all stars
+                document.querySelectorAll('.star').forEach(s => {
+                    s.classList.remove('filled');
+                    s.textContent = '☆';
+                });
+
+                // Step 2: If it wasn't already the favorite, set this one
+                if (!isCurrentlyFav) {
+                    await fetch(`${SUPABASE_URL}/rest/v1/team?teamname=eq.${encodeURIComponent(teamname)}`, {
+                        method: 'PATCH',
+                        headers: sbHeaders(),
+                        body: JSON.stringify({ favorite: true })
+                    });
+
+                    starEl.classList.add('filled');
+                    starEl.textContent = '★';
+                    updateFavoriteDisplay(teamname);
+                } else {
+                    // Removed the favorite — clear the nav text
+                    updateFavoriteDisplay(null);
+                }
+            } catch (err) {
+                console.error('Error toggling favorite:', err);
+            }
+        }
+
+        // Fetch and render team table
+        async function fetchTeams() {
+            const loading = document.getElementById('loading');
+            const error = document.getElementById('error');
+            const tableWrapper = document.getElementById('table-wrapper');
+            const tbody = document.getElementById('teams-body');
+
+            try {
+                const res = await fetch(`${SUPABASE_URL}/rest/v1/team?select=ranking,country,teamname,favorite&order=ranking.asc`, {
+                    headers: {
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                    }
+                });
+
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const teams = await res.json();
+
+                teams.forEach(team => {
+                    const tr = document.createElement('tr');
+
+                    const rankTd = document.createElement('td');
+                    rankTd.textContent = team.ranking ?? '—';
+                    rankTd.classList.add('cell-rank');
+
+                    const countryTd = document.createElement('td');
+                    countryTd.textContent = team.country ?? '—';
+
+                    const nameTd = document.createElement('td');
+                    nameTd.textContent = team.teamname ?? '—';
+
+                    const favTd = document.createElement('td');
+                    favTd.classList.add('cell-fav');
+
+                    const starSpan = document.createElement('span');
+                    starSpan.classList.add('star');
+                    if (team.favorite) {
+                        starSpan.classList.add('filled');
+                        starSpan.textContent = '★';
+                    } else {
+                        starSpan.textContent = '☆';
+                    }
+
+                    // Click handler for toggling
+                    starSpan.addEventListener('click', () => {
+                        toggleFavorite(team.teamname, starSpan);
+                    });
+
+                    favTd.appendChild(starSpan);
+                    tr.appendChild(rankTd);
+                    tr.appendChild(countryTd);
+                    tr.appendChild(nameTd);
+                    tr.appendChild(favTd);
+                    tbody.appendChild(tr);
+                });
+
+                loading.style.display = 'none';
+                tableWrapper.style.display = 'block';
+
+            } catch (err) {
+                console.error('Error fetching teams:', err);
+                loading.style.display = 'none';
+                error.style.display = 'block';
+            }
+        }
+
+        fetchTeams();
+    </script>
+</body>
+
+</html>
