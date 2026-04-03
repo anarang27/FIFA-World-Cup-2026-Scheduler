@@ -18,9 +18,10 @@
 
     <!-- Navigation Bar -->
     <nav id="main-nav">
-        <a href="#" class="nav-brand" id="tab-wcs">WCS</a>
+        <a href="home.html" class="nav-brand" id="tab-wcs">WCS</a>
+        <span class="fav-display" id="fav-display"></span>
         <ul class="nav-links">
-            <li><a href="#teams" id="tab-teams">Teams</a></li>
+            <li><a href="team.html" id="tab-teams">Teams</a></li>
             <li><a href="#stadium" id="tab-stadium">Stadium</a></li>
             <li><a href="#matches" id="tab-matches">Matches</a></li>
             <li><a href="#scheduler" id="tab-scheduler">Scheduler</a></li>
@@ -33,17 +34,9 @@
         <img src="logo.png" alt="FIFA World Cup 2026 Logo">
     </div>
 
-    <!-- Navigation interactivity -->
-    <script>
-        const navLinks = document.querySelectorAll('.nav-links a');
-        navLinks.forEach(link => {
-            link.addEventListener('click', function (e) {
-                e.preventDefault();
-                navLinks.forEach(l => l.classList.remove('active'));
-                this.classList.add('active');
-            });
-        });
-    </script>
+    <!-- Navigation -->
+    <script src="config.js"></script>
+    <script src="nav.js"></script>
 </body>
 
 </html>

@@ -92,6 +92,22 @@ body {
     align-items: center;
 }
 
+/* Favorite Team Display */
+.fav-display {
+    font-family: 'Ultimate', sans-serif;
+    font-size: 1.2rem;
+    color: #cfae5f;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+}
+
+.fav-display:not(:empty) {
+    opacity: 1;
+}
+
 /* WCS Tab */
 .nav-brand {
     font-family: 'Ultimate', sans-serif;
