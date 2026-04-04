@@ -95,7 +95,7 @@
 
                 // Step 2: If it wasn't already the favorite, set this one
                 if (!isCurrentlyFav) {
-                    await fetch(`${SUPABASE_URL}/rest/v1/team?teamname=eq.${encodeURIComponent(teamname)}`, {
+                    await fetch(`${SUPABASE_URL}/rest/v1/team?team_name=eq.${encodeURIComponent(teamname)}`, {
                         method: 'PATCH',
                         headers: sbHeaders(),
                         body: JSON.stringify({ favorite: true })
@@ -121,7 +121,7 @@
             const tbody = document.getElementById('teams-body');
 
             try {
-                const res = await fetch(`${SUPABASE_URL}/rest/v1/team?select=ranking,country,teamname,favorite&order=ranking.asc`, {
+                const res = await fetch(`${SUPABASE_URL}/rest/v1/team?select=ranking,country,team_name,favorite&order=ranking.asc`, {
                     headers: {
                         'apikey': SUPABASE_ANON_KEY,
                         'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
@@ -142,7 +142,7 @@
                     countryTd.textContent = team.country ?? '—';
 
                     const nameTd = document.createElement('td');
-                    nameTd.textContent = team.teamname ?? '—';
+                    nameTd.textContent = team.team_name ?? '—';
 
                     const favTd = document.createElement('td');
                     favTd.classList.add('cell-fav');
@@ -158,7 +158,7 @@
 
                     // Click handler for toggling
                     starSpan.addEventListener('click', () => {
-                        toggleFavorite(team.teamname, starSpan);
+                        toggleFavorite(team.team_name, starSpan);
                     });
 
                     favTd.appendChild(starSpan);

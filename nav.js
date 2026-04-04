@@ -37,7 +37,7 @@ async function loadFavoriteDisplay() {
     if (typeof SUPABASE_URL === 'undefined' || typeof SUPABASE_ANON_KEY === 'undefined') return;
 
     try {
-        const res = await fetch(`${SUPABASE_URL}/rest/v1/team?favorite=eq.true&select=teamname&limit=1`, {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/team?favorite=eq.true&select=team_name&limit=1`, {
             headers: {
                 'apikey': SUPABASE_ANON_KEY,
                 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
@@ -47,8 +47,8 @@ async function loadFavoriteDisplay() {
         if (!res.ok) return;
         const data = await res.json();
 
-        if (data.length > 0 && data[0].teamname) {
-            favEl.textContent = `Favorite Team: ${data[0].teamname}`;
+        if (data.length > 0 && data[0].team_name) {
+            favEl.textContent = `Favorite Team: ${data[0].team_name}`;
         } else {
             favEl.textContent = '';
         }

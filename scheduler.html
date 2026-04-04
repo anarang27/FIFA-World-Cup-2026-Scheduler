@@ -67,12 +67,12 @@
 
         // Build a team lookup map: teamid -> teamname
         async function loadTeamMap() {
-            const res = await fetch(`${SUPABASE_URL}/rest/v1/team?select=teamid,teamname`, {
+            const res = await fetch(`${SUPABASE_URL}/rest/v1/team?select=team_id,team_name`, {
                 headers: sbHeaders()
             });
             const teams = await res.json();
             const map = {};
-            teams.forEach(t => map[t.teamid] = t.teamname);
+            teams.forEach(t => map[t.team_id] = t.team_name);
             return map;
         }
 
