@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reports — FIFA World Cup 2026 Scheduler</title>
+    <meta name="description" content="World Cup 2026 reports and analytics dashboard.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/global.css">
+    <link rel="stylesheet" href="css/reports.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+</head>
+
+<body>
+    <nav id="main-nav">
+        <a href="home.html" class="nav-brand" id="tab-wcs">WCS</a>
+        <span class="fav-display" id="fav-display"></span>
+        <ul class="nav-links">
+            <li><a href="team.html" id="tab-teams">Teams</a></li>
+            <li><a href="stadium.html" id="tab-stadium">Stadium</a></li>
+            <li><a href="matches.html" id="tab-matches">Matches</a></li>
+            <li><a href="scheduler.html" id="tab-scheduler">Scheduler</a></li>
+            <li><a href="watchlist.html" id="tab-watchlist">Watchlist</a></li>
+            <li><a href="reports.html" id="tab-reports">Reports</a></li>
+        </ul>
+        <div class="auth-area" id="auth-area"></div>
+    </nav>
+
+    <main class="page-content wide">
+        <h1 class="page-title">Reports & Analytics</h1>
+
+        <div id="loading" class="loading-spinner">
+            <div class="spinner"></div>
+            <p>Loading reports...</p>
+        </div>
+
+        <div id="report-grid" class="report-grid" style="display:none;">
+            <!-- Matches by Stage -->
+            <div class="report-card">
+                <h2 class="report-title">Matches by Stage</h2>
+                <canvas id="chart-stage"></canvas>
+            </div>
+
+            <!-- Matches by Venue -->
+            <div class="report-card">
+                <h2 class="report-title">Matches by Venue</h2>
+                <canvas id="chart-venue"></canvas>
+            </div>
+
+            <!-- Venue Capacity -->
+            <div class="report-card">
+                <h2 class="report-title">Stadium Capacity</h2>
+                <canvas id="chart-capacity"></canvas>
+            </div>
+
+            <!-- Matches by Date -->
+            <div class="report-card full-width">
+                <h2 class="report-title">Match Timeline</h2>
+                <canvas id="chart-timeline"></canvas>
+            </div>
+
+            <!-- Teams by Group -->
+            <div class="report-card full-width">
+                <h2 class="report-title">Teams by Group</h2>
+                <div id="groups-grid" class="groups-grid"></div>
+            </div>
+        </div>
+    </main>
+
+    <script src="js/api.js"></script>
+    <script src="js/nav.js"></script>
+    <script>
+        if (!API.isLoggedIn()) window.location.href = 'index.html';
+
+        const COLORS = ['#c3ec0b','#00c053','#00503e','#ff4b00','#d10000','#6f000b','#85b9ff','#244efe','#0c1b9b','#cfae5f',
+                         '#e6c46a','#7be87b','#ff8c5a','#a5d8ff','#ffa3a3','#c9b3ff'];
+
+        function makeChart(id, type, labels, data, label, colors) {
+            const ctx = document.getElementById(id).getContext('2d');
+            new Chart(ctx, {
+                type,
+                data: {
+                    labels,
+                    datasets: [{
+                        label,
+                        data,
+                        backgroundColor: colors || COLORS.slice(0, data.length),
+                        borderColor: 'rgba(255,255,255,0.1)',
+                        borderWidth: 1,
+                        borderRadius: type === 'bar' ? 6 : 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { display: type === 'doughnut' || type === 'pie', labels: { color: '#ccc', font: { family: 'Outfit' } } }
+                    },
+                    scales: type === 'bar' || type === 'line' ? {
+                        x: { ticks: { color: '#888', font: { family: 'Outfit' } }, grid: { color: 'rgba(255,255,255,0.04)' } },
+                        y: { ticks: { color: '#888', font: { family: 'Outfit' } }, grid: { color: 'rgba(255,255,255,0.04)' }, beginAtZero: true }
+                    } : undefined
+                }
+            });
+        }
+
+        async function loadReports() {
+            const loading = document.getElementById('loading');
+            const grid = document.getElementById('report-grid');
+
+            try {
+                const [byStage, byVenue, byDate, teamsByGroup, capacity] = await Promise.all([
+                    API.get('/api/reports/matches-by-stage'),
+                    API.get('/api/reports/matches-by-venue'),
+                    API.get('/api/reports/matches-by-date'),
+                    API.get('/api/reports/teams-by-group'),
+                    API.get('/api/reports/venue-capacity')
+                ]);
+
+                // Matches by Stage
+                makeChart('chart-stage', 'doughnut',
+                    byStage.map(s => s.stage), byStage.map(s => s.count), 'Matches');
+
+                // Matches by Venue
+                makeChart('chart-venue', 'bar',
+                    byVenue.map(v => v.venue), byVenue.map(v => v.count), 'Matches');
+
+                // Venue Capacity
+                makeChart('chart-capacity', 'bar',
+                    capacity.map(v => v.venuename), capacity.map(v => v.capacity), 'Capacity',
+                    capacity.map((_, i) => COLORS[i % COLORS.length]));
+
+                // Match Timeline
+                makeChart('chart-timeline', 'line',
+                    byDate.map(d => {
+                        const dt = new Date(d.date + 'T00:00:00');
+                        return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                    }),
+                    byDate.map(d => d.count), 'Matches per Day',
+                    ['rgba(207,174,95,0.6)']);
+
+                // Teams by Group
+                const groupsGrid = document.getElementById('groups-grid');
+                Object.entries(teamsByGroup).sort().forEach(([groupName, teams]) => {
+                    const groupCard = document.createElement('div');
+                    groupCard.classList.add('group-card');
+                    groupCard.innerHTML = `
+                        <h3 class="group-name">${groupName}</h3>
+                        <ul class="group-teams">
+                            ${teams.sort((a,b) => a.ranking - b.ranking).map(t =>
+                                `<li><span class="team-rank">#${t.ranking}</span> ${t.team_name}</li>`
+                            ).join('')}
+                        </ul>
+                    `;
+                    groupsGrid.appendChild(groupCard);
+                });
+
+                loading.style.display = 'none';
+                grid.style.display = 'grid';
+            } catch (err) {
+                console.error('Error loading reports:', err);
+                loading.style.display = 'none';
+                document.getElementById('loading').innerHTML = '<p class="error-msg">⚠ Failed to load reports.</p>';
+            }
+        }
+
+        loadReports();
+    </script>
+</body>
+
+</html>

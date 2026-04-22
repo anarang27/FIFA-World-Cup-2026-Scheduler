@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stadiums — FIFA World Cup 2026 Scheduler</title>
+    <meta name="description" content="Explore all 16 stadiums hosting the FIFA World Cup 2026 across the USA, Mexico, and Canada.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/global.css">
+    <link rel="stylesheet" href="css/stadium.css">
+</head>
+
+<body>
+    <nav id="main-nav">
+        <a href="home.html" class="nav-brand" id="tab-wcs">WCS</a>
+        <span class="fav-display" id="fav-display"></span>
+        <ul class="nav-links">
+            <li><a href="team.html" id="tab-teams">Teams</a></li>
+            <li><a href="stadium.html" id="tab-stadium">Stadium</a></li>
+            <li><a href="matches.html" id="tab-matches">Matches</a></li>
+            <li><a href="scheduler.html" id="tab-scheduler">Scheduler</a></li>
+            <li><a href="watchlist.html" id="tab-watchlist">Watchlist</a></li>
+            <li><a href="reports.html" id="tab-reports">Reports</a></li>
+        </ul>
+        <div class="auth-area" id="auth-area"></div>
+    </nav>
+
+    <main class="page-content">
+        <h1 class="page-title">World Cup 2026 Stadiums</h1>
+
+        <div id="loading" class="loading-spinner">
+            <div class="spinner"></div>
+            <p>Loading stadiums...</p>
+        </div>
+        <div id="error" class="error-msg" style="display:none;">
+            <p>⚠ Failed to load stadiums.</p>
+        </div>
+
+        <div id="stadium-grid" class="stadium-grid" style="display:none;">
+            <!-- Cards inserted by JS -->
+        </div>
+    </main>
+
+    <script src="js/api.js"></script>
+    <script src="js/nav.js"></script>
+    <script>
+        if (!API.isLoggedIn()) window.location.href = 'index.html';
+
+        async function loadStadiums() {
+            const loading = document.getElementById('loading');
+            const error = document.getElementById('error');
+            const grid = document.getElementById('stadium-grid');
+
+            try {
+                const stadiums = await API.get('/api/stadiums');
+
+                stadiums.forEach((s, i) => {
+                    const card = document.createElement('div');
+                    card.classList.add('stadium-card');
+                    card.style.animationDelay = `${i * 0.06}s`;
+
+                    const capFormatted = s.capacity ? s.capacity.toLocaleString() : '—';
+
+                    card.innerHTML = `
+                        <div class="stadium-header">
+                            <span class="stadium-number">${s.venueid}</span>
+                            <h2 class="stadium-name">${s.venuename}</h2>
+                        </div>
+                        <div class="stadium-info">
+                            <div class="info-row">
+                                <span class="info-label">Location</span>
+                                <span class="info-value">${s.location || s.cityname || '—'}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Country</span>
+                                <span class="info-value">${s.country || '—'}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Capacity</span>
+                                <span class="info-value capacity-value">${capFormatted}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Matches</span>
+                                <span class="info-value match-count">${s.matchcount} match${s.matchcount !== 1 ? 'es' : ''}</span>
+                            </div>
+                        </div>
+                        <div class="capacity-bar-container">
+                            <div class="capacity-bar" style="width: ${Math.min((s.capacity / 85000) * 100, 100)}%"></div>
+                        </div>
+                    `;
+                    grid.appendChild(card);
+                });
+
+                loading.style.display = 'none';
+                grid.style.display = 'grid';
+            } catch (err) {
+                console.error('Error loading stadiums:', err);
+                loading.style.display = 'none';
+                error.style.display = 'block';
+            }
+        }
+
+        loadStadiums();
+    </script>
+</body>
+
+</html>

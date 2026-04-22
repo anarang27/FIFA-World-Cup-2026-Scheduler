@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Matches — FIFA World Cup 2026 Scheduler</title>
+    <meta name="description" content="Browse the complete FIFA World Cup 2026 match schedule.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/global.css">
+    <link rel="stylesheet" href="css/matches.css">
+</head>
+
+<body>
+    <nav id="main-nav">
+        <a href="home.html" class="nav-brand" id="tab-wcs">WCS</a>
+        <span class="fav-display" id="fav-display"></span>
+        <ul class="nav-links">
+            <li><a href="team.html" id="tab-teams">Teams</a></li>
+            <li><a href="stadium.html" id="tab-stadium">Stadium</a></li>
+            <li><a href="matches.html" id="tab-matches">Matches</a></li>
+            <li><a href="scheduler.html" id="tab-scheduler">Scheduler</a></li>
+            <li><a href="watchlist.html" id="tab-watchlist">Watchlist</a></li>
+            <li><a href="reports.html" id="tab-reports">Reports</a></li>
+        </ul>
+        <div class="auth-area" id="auth-area"></div>
+    </nav>
+
+    <main class="page-content">
+        <h1 class="page-title">Match Schedule</h1>
+
+        <!-- Filters -->
+        <div class="filters" id="filters" style="display:none;">
+            <select id="filter-stage" class="filter-select">
+                <option value="">All Stages</option>
+            </select>
+            <select id="filter-team" class="filter-select">
+                <option value="">All Teams</option>
+            </select>
+        </div>
+
+        <div id="loading" class="loading-spinner">
+            <div class="spinner"></div>
+            <p>Loading matches...</p>
+        </div>
+        <div id="error" class="error-msg" style="display:none;">
+            <p>⚠ Failed to load matches.</p>
+        </div>
+
+        <div id="match-list" class="match-list" style="display:none;"></div>
+    </main>
+
+    <script src="js/api.js"></script>
+    <script src="js/nav.js"></script>
+    <script>
+        if (!API.isLoggedIn()) window.location.href = 'index.html';
+
+        let allMatches = [];
+
+        function fmtDate(d) {
+            if (!d) return '—';
+            const dt = new Date(d + 'T00:00:00');
+            return dt.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+        }
+        function fmtTime(t) {
+            if (!t) return '';
+            const [h, m] = t.split(':');
+            const hr = parseInt(h); const ap = hr >= 12 ? 'PM' : 'AM';
+            return `${hr % 12 || 12}:${m} ${ap}`;
+        }
+
+        function renderMatches(matches) {
+            const list = document.getElementById('match-list');
+            list.innerHTML = '';
+
+            if (matches.length === 0) {
+                list.innerHTML = '<p class="no-results">No matches found for this filter.</p>';
+                return;
+            }
+
+            // Group by date
+            const byDate = {};
+            matches.forEach(m => {
+                const d = m.matchdate || 'Unknown';
+                if (!byDate[d]) byDate[d] = [];
+                byDate[d].push(m);
+            });
+
+            Object.entries(byDate).forEach(([date, ms]) => {
+                const section = document.createElement('div');
+                section.classList.add('date-section');
+
+                const dateHeader = document.createElement('div');
+                dateHeader.classList.add('date-header');
+                dateHeader.textContent = fmtDate(date);
+                section.appendChild(dateHeader);
+
+                ms.forEach(m => {
+                    const card = document.createElement('div');
+                    card.classList.add('match-card');
+                    card.innerHTML = `
+                        <div class="match-teams">
+                            <span class="team-name">${m.team1name || 'TBD'}</span>
+                            <span class="vs">vs</span>
+                            <span class="team-name">${m.team2name || 'TBD'}</span>
+                        </div>
+                        <div class="match-details">
+                            ${m.stagename ? `<span class="match-stage">${m.stagename}</span>` : ''}
+                            <span class="match-time">${fmtTime(m.matchtime)}</span>
+                            ${m.venuename ? `<span class="match-venue">📍 ${m.venuename}</span>` : ''}
+                        </div>
+                    `;
+                    section.appendChild(card);
+                });
+
+                list.appendChild(section);
+            });
+        }
+
+        function applyFilters() {
+            const stage = document.getElementById('filter-stage').value;
+            const team = document.getElementById('filter-team').value;
+            let filtered = allMatches;
+            if (stage) filtered = filtered.filter(m => String(m.stageid) === stage);
+            if (team) filtered = filtered.filter(m => String(m.team1id) === team || String(m.team2id) === team);
+            renderMatches(filtered);
+        }
+
+        async function loadMatches() {
+            const loading = document.getElementById('loading');
+            const error = document.getElementById('error');
+            const list = document.getElementById('match-list');
+            const filters = document.getElementById('filters');
+
+            try {
+                const [matches, stages, teams] = await Promise.all([
+                    API.get('/api/matches'),
+                    API.get('/api/matches/stages'),
+                    API.get('/api/teams')
+                ]);
+
+                allMatches = matches;
+
+                // Populate stage filter
+                const stageSelect = document.getElementById('filter-stage');
+                stages.forEach(s => {
+                    const opt = document.createElement('option');
+                    opt.value = s.stageid;
+                    opt.textContent = s.stagename;
+                    stageSelect.appendChild(opt);
+                });
+
+                // Populate team filter
+                const teamSelect = document.getElementById('filter-team');
+                teams.sort((a, b) => a.team_name.localeCompare(b.team_name)).forEach(t => {
+                    const opt = document.createElement('option');
+                    opt.value = t.team_id;
+                    opt.textContent = t.team_name;
+                    teamSelect.appendChild(opt);
+                });
+
+                stageSelect.addEventListener('change', applyFilters);
+                teamSelect.addEventListener('change', applyFilters);
+
+                renderMatches(matches);
+
+                loading.style.display = 'none';
+                filters.style.display = 'flex';
+                list.style.display = 'flex';
+            } catch (err) {
+                console.error('Error loading matches:', err);
+                loading.style.display = 'none';
+                error.style.display = 'block';
+            }
+        }
+
+        loadMatches();
+    </script>
+</body>
+
+</html>

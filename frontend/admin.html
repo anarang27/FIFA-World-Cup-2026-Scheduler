@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin — FIFA World Cup 2026 Scheduler</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/global.css">
+    <link rel="stylesheet" href="css/admin.css">
+</head>
+
+<body>
+    <nav id="main-nav">
+        <a href="home.html" class="nav-brand" id="tab-wcs">WCS</a>
+        <span class="fav-display" id="fav-display"></span>
+        <ul class="nav-links">
+            <li><a href="team.html" id="tab-teams">Teams</a></li>
+            <li><a href="stadium.html" id="tab-stadium">Stadium</a></li>
+            <li><a href="matches.html" id="tab-matches">Matches</a></li>
+            <li><a href="scheduler.html" id="tab-scheduler">Scheduler</a></li>
+            <li><a href="watchlist.html" id="tab-watchlist">Watchlist</a></li>
+            <li><a href="reports.html" id="tab-reports">Reports</a></li>
+        </ul>
+        <div class="auth-area" id="auth-area"></div>
+    </nav>
+
+    <main class="page-content">
+        <h1 class="page-title">Admin Panel</h1>
+
+        <div id="no-access" class="error-msg" style="display:none;">
+            <p>⚠ You do not have admin access.</p>
+        </div>
+
+        <div id="admin-content" style="display:none;">
+            <!-- Create User -->
+            <div class="admin-section">
+                <h2 class="section-title">Create User</h2>
+                <div class="admin-error" id="create-error"></div>
+                <div class="admin-success" id="create-success"></div>
+                <form id="create-form" class="create-form">
+                    <div class="form-row">
+                        <input type="text" id="new-firstname" placeholder="First Name" class="admin-input">
+                        <input type="text" id="new-lastname" placeholder="Last Name" class="admin-input">
+                    </div>
+                    <input type="text" id="new-username" placeholder="Username" required class="admin-input">
+                    <input type="email" id="new-email" placeholder="Email" required class="admin-input">
+                    <input type="password" id="new-password" placeholder="Password (min 6 chars)" required minlength="6" class="admin-input">
+                    <button type="submit" class="btn-create">Create User</button>
+                </form>
+            </div>
+
+            <!-- User List -->
+            <div class="admin-section">
+                <h2 class="section-title">All Users</h2>
+                <div class="table-wrapper">
+                    <table id="users-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th><th>Username</th><th>Email</th>
+                                <th>Name</th><th>Role</th><th>Registered</th>
+                            </tr>
+                        </thead>
+                        <tbody id="users-body"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Change Password -->
+            <div class="admin-section">
+                <h2 class="section-title">Change Your Password</h2>
+                <div class="admin-error" id="pw-error"></div>
+                <div class="admin-success" id="pw-success"></div>
+                <form id="pw-form" class="create-form">
+                    <input type="password" id="current-pw" placeholder="Current Password" required class="admin-input">
+                    <input type="password" id="new-pw" placeholder="New Password (min 6 chars)" required minlength="6" class="admin-input">
+                    <button type="submit" class="btn-create">Update Password</button>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <script src="js/api.js"></script>
+    <script src="js/nav.js"></script>
+    <script>
+        if (!API.isLoggedIn()) { window.location.href = 'index.html'; }
+
+        const user = API.getUser();
+        if (user && user.role === 'admin') {
+            document.getElementById('admin-content').style.display = 'block';
+            loadUsers();
+        } else {
+            document.getElementById('no-access').style.display = 'block';
+        }
+
+        async function loadUsers() {
+            try {
+                const users = await API.get('/api/auth/users');
+                const tbody = document.getElementById('users-body');
+                tbody.innerHTML = '';
+                users.forEach(u => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${u.userid}</td>
+                        <td>${u.username}</td>
+                        <td>${u.email}</td>
+                        <td>${(u.firstname || '') + ' ' + (u.lastname || '')}</td>
+                        <td><span class="role-badge ${u.role}">${u.role}</span></td>
+                        <td>${u.registrationdate || '—'}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } catch (err) {
+                console.error('Error loading users:', err);
+            }
+        }
+
+        document.getElementById('create-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const errEl = document.getElementById('create-error');
+            const sucEl = document.getElementById('create-success');
+            errEl.textContent = ''; errEl.style.display = 'none';
+            sucEl.textContent = ''; sucEl.style.display = 'none';
+
+            try {
+                await API.post('/api/auth/create-user', {
+                    username: document.getElementById('new-username').value,
+                    email: document.getElementById('new-email').value,
+                    password: document.getElementById('new-password').value,
+                    firstname: document.getElementById('new-firstname').value || null,
+                    lastname: document.getElementById('new-lastname').value || null
+                });
+                sucEl.textContent = 'User created successfully!';
+                sucEl.style.display = 'block';
+                e.target.reset();
+                loadUsers();
+            } catch (err) {
+                errEl.textContent = err.message;
+                errEl.style.display = 'block';
+            }
+        });
+
+        document.getElementById('pw-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const errEl = document.getElementById('pw-error');
+            const sucEl = document.getElementById('pw-success');
+            errEl.textContent = ''; errEl.style.display = 'none';
+            sucEl.textContent = ''; sucEl.style.display = 'none';
+
+            try {
+                await API.put('/api/auth/password', {
+                    currentPassword: document.getElementById('current-pw').value,
+                    newPassword: document.getElementById('new-pw').value
+                });
+                sucEl.textContent = 'Password updated!';
+                sucEl.style.display = 'block';
+                e.target.reset();
+            } catch (err) {
+                errEl.textContent = err.message;
+                errEl.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,57 @@
+/* FIFA World Cup 2026 Scheduler — reports.css */
+
+.page-content.wide { max-width: 1400px; }
+
+.report-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+    gap: 1.5rem;
+}
+
+.report-card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 16px;
+    padding: 1.8rem;
+    transition: border-color 0.3s;
+}
+.report-card:hover { border-color: rgba(207,174,95,0.2); }
+.report-card.full-width { grid-column: 1 / -1; }
+
+.report-title {
+    font-family: 'Ultimate', sans-serif; font-size: 1.5rem;
+    color: var(--gold); letter-spacing: 3px; text-transform: uppercase;
+    margin-bottom: 1.2rem;
+}
+
+/* Groups Grid */
+.groups-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+}
+.group-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 12px;
+    padding: 1.2rem;
+}
+.group-name {
+    font-family: 'Ultimate', sans-serif; font-size: 1.2rem;
+    color: var(--gold); letter-spacing: 2px; margin-bottom: 0.8rem;
+}
+.group-teams { list-style: none; }
+.group-teams li {
+    padding: 0.3rem 0; color: #ccc; font-size: 0.95rem;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.group-teams li:last-child { border-bottom: none; }
+.team-rank {
+    font-family: 'Ultimate', sans-serif; color: var(--gold);
+    font-size: 0.85rem; margin-right: 0.5rem; opacity: 0.6;
+}
+
+@media (max-width: 768px) {
+    .report-grid { grid-template-columns: 1fr; }
+    .groups-grid { grid-template-columns: repeat(2, 1fr); }
+}

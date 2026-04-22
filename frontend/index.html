@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login — FIFA World Cup 2026 Scheduler</title>
+    <meta name="description" content="Sign in to the FIFA World Cup 2026 Scheduler to build your personalized viewing schedule.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/auth.css">
+</head>
+
+<body>
+    <div class="auth-card">
+        <div class="auth-logo">
+            <img src="logo.png" alt="FIFA World Cup 2026 Logo">
+        </div>
+        <h1 class="auth-title">WCS</h1>
+        <p class="auth-subtitle">World Cup 2026 Scheduler</p>
+
+        <!-- Tabs -->
+        <div class="auth-tabs">
+            <button class="auth-tab active" id="tab-login" onclick="showForm('login')">Login</button>
+            <button class="auth-tab" id="tab-signup" onclick="showForm('signup')">Sign Up</button>
+        </div>
+
+        <!-- Error / Success -->
+        <div class="auth-error" id="auth-error"></div>
+        <div class="auth-success" id="auth-success"></div>
+
+        <!-- Login Form -->
+        <form class="auth-form active" id="form-login" onsubmit="handleLogin(event)">
+            <div class="form-group">
+                <label for="login-email">Email</label>
+                <input type="email" id="login-email" placeholder="you@example.com" required autocomplete="email">
+            </div>
+            <div class="form-group">
+                <label for="login-password">Password</label>
+                <input type="password" id="login-password" placeholder="••••••••" required autocomplete="current-password">
+            </div>
+            <button type="submit" class="btn-submit" id="btn-login">Login</button>
+        </form>
+
+        <!-- Signup Form -->
+        <form class="auth-form" id="form-signup" onsubmit="handleSignup(event)">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="signup-firstname">First Name</label>
+                    <input type="text" id="signup-firstname" placeholder="John">
+                </div>
+                <div class="form-group">
+                    <label for="signup-lastname">Last Name</label>
+                    <input type="text" id="signup-lastname" placeholder="Doe">
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="signup-username">Username</label>
+                <input type="text" id="signup-username" placeholder="johndoe" required>
+            </div>
+            <div class="form-group">
+                <label for="signup-email">Email</label>
+                <input type="email" id="signup-email" placeholder="you@example.com" required autocomplete="email">
+            </div>
+            <div class="form-group">
+                <label for="signup-password">Password</label>
+                <input type="password" id="signup-password" placeholder="Min 6 characters" required minlength="6" autocomplete="new-password">
+            </div>
+            <button type="submit" class="btn-submit" id="btn-signup">Create Account</button>
+        </form>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script>
+        // Redirect if already logged in
+        if (API.isLoggedIn()) window.location.href = 'home.html';
+
+        function showForm(which) {
+            document.getElementById('form-login').classList.toggle('active', which === 'login');
+            document.getElementById('form-signup').classList.toggle('active', which === 'signup');
+            document.getElementById('tab-login').classList.toggle('active', which === 'login');
+            document.getElementById('tab-signup').classList.toggle('active', which === 'signup');
+            hideMessages();
+        }
+
+        function showError(msg) {
+            const el = document.getElementById('auth-error');
+            el.textContent = msg; el.classList.add('visible');
+            document.getElementById('auth-success').classList.remove('visible');
+        }
+        function showSuccess(msg) {
+            const el = document.getElementById('auth-success');
+            el.textContent = msg; el.classList.add('visible');
+            document.getElementById('auth-error').classList.remove('visible');
+        }
+        function hideMessages() {
+            document.getElementById('auth-error').classList.remove('visible');
+            document.getElementById('auth-success').classList.remove('visible');
+        }
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            hideMessages();
+            const btn = document.getElementById('btn-login');
+            btn.disabled = true; btn.textContent = 'Logging in...';
+            try {
+                const data = await API.post('/api/auth/login', {
+                    email: document.getElementById('login-email').value,
+                    password: document.getElementById('login-password').value
+                });
+                API.saveAuth(data.token, data.user);
+                window.location.href = 'home.html';
+            } catch (err) {
+                showError(err.message);
+                btn.disabled = false; btn.textContent = 'Login';
+            }
+        }
+
+        async function handleSignup(e) {
+            e.preventDefault();
+            hideMessages();
+            const btn = document.getElementById('btn-signup');
+            btn.disabled = true; btn.textContent = 'Creating...';
+            try {
+                const data = await API.post('/api/auth/signup', {
+                    username: document.getElementById('signup-username').value,
+                    email: document.getElementById('signup-email').value,
+                    password: document.getElementById('signup-password').value,
+                    firstname: document.getElementById('signup-firstname').value || null,
+                    lastname: document.getElementById('signup-lastname').value || null
+                });
+                API.saveAuth(data.token, data.user);
+                window.location.href = 'home.html';
+            } catch (err) {
+                showError(err.message);
+                btn.disabled = false; btn.textContent = 'Create Account';
+            }
+        }
+    </script>
+</body>
+
+</html>

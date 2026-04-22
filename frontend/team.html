@@ -8,9 +8,9 @@
     <meta name="description" content="Browse all 48 qualified teams for the FIFA World Cup 2026.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@400;600;800&display=swap"
-        rel="stylesheet">
-    <link rel="stylesheet" href="team.css">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/global.css">
+    <link rel="stylesheet" href="css/team.css">
 </head>
 
 <body>
@@ -20,37 +20,38 @@
         <a href="home.html" class="nav-brand" id="tab-wcs">WCS</a>
         <span class="fav-display" id="fav-display"></span>
         <ul class="nav-links">
-            <li><a href="team.html" id="tab-teams" class="active">Teams</a></li>
-            <li><a href="#stadium" id="tab-stadium">Stadium</a></li>
-            <li><a href="#matches" id="tab-matches">Matches</a></li>
+            <li><a href="team.html" id="tab-teams">Teams</a></li>
+            <li><a href="stadium.html" id="tab-stadium">Stadium</a></li>
+            <li><a href="matches.html" id="tab-matches">Matches</a></li>
             <li><a href="scheduler.html" id="tab-scheduler">Scheduler</a></li>
             <li><a href="watchlist.html" id="tab-watchlist">Watchlist</a></li>
+            <li><a href="reports.html" id="tab-reports">Reports</a></li>
         </ul>
+        <div class="auth-area" id="auth-area"></div>
     </nav>
 
     <!-- Page Content -->
     <main class="page-content">
         <h1 class="page-title">World Cup 2026 Teams</h1>
 
-        <!-- Loading State -->
         <div id="loading" class="loading-spinner">
             <div class="spinner"></div>
             <p>Loading teams...</p>
         </div>
 
-        <!-- Error State -->
         <div id="error" class="error-msg" style="display:none;">
             <p>⚠ Failed to load teams. Please try again.</p>
         </div>
 
-        <!-- Teams Table -->
         <div id="table-wrapper" class="table-wrapper" style="display:none;">
             <table id="teams-table">
                 <thead>
                     <tr>
                         <th id="col-ranking">Ranking</th>
+                        <th id="col-flag"></th>
                         <th id="col-country">Country</th>
                         <th id="col-teamname">Team Name</th>
+                        <th id="col-coach">Coach</th>
                         <th id="col-favorite">Favorite</th>
                     </tr>
                 </thead>
@@ -61,30 +62,19 @@
         </div>
     </main>
 
-    <!-- Scripts -->
-    <script src="config.js"></script>
-    <script src="nav.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/nav.js"></script>
     <script>
-        // Supabase helper: standard headers
-        function sbHeaders() {
-            return {
-                'apikey': SUPABASE_ANON_KEY,
-                'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-                'Content-Type': 'application/json',
-                'Prefer': 'return=minimal'
-            };
-        }
+        if (!API.isLoggedIn()) window.location.href = 'index.html';
 
-        // Toggle favorite for a team (only 1 allowed at a time)
-        async function toggleFavorite(teamname, starEl) {
+        let currentFavoriteTeamId = null;
+
+        async function toggleFavorite(teamid, teamname, starEl) {
             const isCurrentlyFav = starEl.classList.contains('filled');
-
             try {
-                // Step 1: Clear ALL favorites first
-                await fetch(`${SUPABASE_URL}/rest/v1/team?favorite=eq.true`, {
-                    method: 'PATCH',
-                    headers: sbHeaders(),
-                    body: JSON.stringify({ favorite: null })
+                // If it's already the fav, remove it; otherwise set it
+                await API.post('/api/teams/favorite', {
+                    teamid: isCurrentlyFav ? null : teamid
                 });
 
                 // Update UI: reset all stars
@@ -93,19 +83,13 @@
                     s.textContent = '☆';
                 });
 
-                // Step 2: If it wasn't already the favorite, set this one
                 if (!isCurrentlyFav) {
-                    await fetch(`${SUPABASE_URL}/rest/v1/team?team_name=eq.${encodeURIComponent(teamname)}`, {
-                        method: 'PATCH',
-                        headers: sbHeaders(),
-                        body: JSON.stringify({ favorite: true })
-                    });
-
                     starEl.classList.add('filled');
                     starEl.textContent = '★';
+                    currentFavoriteTeamId = teamid;
                     updateFavoriteDisplay(teamname);
                 } else {
-                    // Removed the favorite — clear the nav text
+                    currentFavoriteTeamId = null;
                     updateFavoriteDisplay(null);
                 }
             } catch (err) {
@@ -113,7 +97,6 @@
             }
         }
 
-        // Fetch and render team table
         async function fetchTeams() {
             const loading = document.getElementById('loading');
             const error = document.getElementById('error');
@@ -121,15 +104,12 @@
             const tbody = document.getElementById('teams-body');
 
             try {
-                const res = await fetch(`${SUPABASE_URL}/rest/v1/team?select=ranking,country,team_name,favorite&order=ranking.asc`, {
-                    headers: {
-                        'apikey': SUPABASE_ANON_KEY,
-                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
-                    }
-                });
+                const [teams, fav] = await Promise.all([
+                    API.get('/api/teams'),
+                    API.get('/api/teams/favorite')
+                ]);
 
-                if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                const teams = await res.json();
+                currentFavoriteTeamId = fav ? fav.teamid : null;
 
                 teams.forEach(team => {
                     const tr = document.createElement('tr');
@@ -138,33 +118,45 @@
                     rankTd.textContent = team.ranking ?? '—';
                     rankTd.classList.add('cell-rank');
 
+                    const flagTd = document.createElement('td');
+                    flagTd.classList.add('cell-flag');
+                    if (team.alpha_iso_2_code) {
+                        const code = team.alpha_iso_2_code.toLowerCase();
+                        flagTd.innerHTML = `<img src="https://flagcdn.com/w40/${code}.png" alt="${team.country}" class="flag-img">`;
+                    }
+
                     const countryTd = document.createElement('td');
                     countryTd.textContent = team.country ?? '—';
 
                     const nameTd = document.createElement('td');
                     nameTd.textContent = team.team_name ?? '—';
 
+                    const coachTd = document.createElement('td');
+                    coachTd.textContent = team.coach ?? '—';
+                    coachTd.classList.add('cell-coach');
+
                     const favTd = document.createElement('td');
                     favTd.classList.add('cell-fav');
 
                     const starSpan = document.createElement('span');
                     starSpan.classList.add('star');
-                    if (team.favorite) {
+                    if (currentFavoriteTeamId === team.team_id) {
                         starSpan.classList.add('filled');
                         starSpan.textContent = '★';
                     } else {
                         starSpan.textContent = '☆';
                     }
 
-                    // Click handler for toggling
                     starSpan.addEventListener('click', () => {
-                        toggleFavorite(team.team_name, starSpan);
+                        toggleFavorite(team.team_id, team.team_name, starSpan);
                     });
 
                     favTd.appendChild(starSpan);
                     tr.appendChild(rankTd);
+                    tr.appendChild(flagTd);
                     tr.appendChild(countryTd);
                     tr.appendChild(nameTd);
+                    tr.appendChild(coachTd);
                     tr.appendChild(favTd);
                     tbody.appendChild(tr);
                 });

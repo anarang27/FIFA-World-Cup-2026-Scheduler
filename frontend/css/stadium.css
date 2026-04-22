@@ -1,0 +1,65 @@
+/* FIFA World Cup 2026 Scheduler — stadium.css */
+
+.stadium-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 1.5rem;
+}
+
+.stadium-card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 16px;
+    padding: 1.8rem;
+    transition: all 0.3s ease;
+    animation: fadeUp 0.5s ease both;
+}
+@keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+.stadium-card:hover {
+    background: rgba(207,174,95,0.06);
+    border-color: rgba(207,174,95,0.25);
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+}
+
+.stadium-header {
+    display: flex; align-items: center; gap: 1rem; margin-bottom: 1.2rem;
+}
+.stadium-number {
+    font-family: 'Ultimate', sans-serif; font-size: 2rem;
+    color: var(--gold); opacity: 0.4; min-width: 2rem;
+}
+.stadium-name {
+    font-family: 'Ultimate', sans-serif; font-size: 1.6rem;
+    letter-spacing: 2px; color: #fff;
+}
+
+.stadium-info { display: flex; flex-direction: column; gap: 0.6rem; margin-bottom: 1rem; }
+.info-row { display: flex; justify-content: space-between; align-items: center; }
+.info-label {
+    font-size: 0.85rem; color: #666; text-transform: uppercase;
+    letter-spacing: 1px; font-family: 'Ultimate', sans-serif;
+}
+.info-value { font-size: 1rem; color: #ccc; }
+.capacity-value { color: var(--lime); font-weight: 600; }
+.match-count {
+    background: rgba(207,174,95,0.15); color: var(--gold);
+    padding: 0.2rem 0.8rem; border-radius: 20px; font-size: 0.85rem;
+    font-family: 'Ultimate', sans-serif; letter-spacing: 1px;
+}
+
+.capacity-bar-container {
+    height: 4px; background: rgba(255,255,255,0.06); border-radius: 4px; overflow: hidden;
+}
+.capacity-bar {
+    height: 100%; border-radius: 4px;
+    background: linear-gradient(90deg, var(--dkgreen), var(--green), var(--lime));
+    transition: width 0.8s ease;
+}
+
+@media (max-width: 768px) {
+    .stadium-grid { grid-template-columns: 1fr; }
+}

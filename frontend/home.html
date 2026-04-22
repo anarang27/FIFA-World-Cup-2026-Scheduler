@@ -5,13 +5,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FIFA World Cup 2026 Scheduler</title>
-    <meta name="description"
-        content="Plan your FIFA World Cup 2026 experience — track teams, explore stadiums, follow matches, and build your personalized viewing schedule.">
+    <meta name="description" content="Plan your FIFA World Cup 2026 experience — track teams, explore stadiums, follow matches, and build your personalized viewing schedule.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@400;600;800&display=swap"
-        rel="stylesheet">
-    <link rel="stylesheet" href="home.css">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/home.css">
 </head>
 
 <body>
@@ -22,11 +20,13 @@
         <span class="fav-display" id="fav-display"></span>
         <ul class="nav-links">
             <li><a href="team.html" id="tab-teams">Teams</a></li>
-            <li><a href="#stadium" id="tab-stadium">Stadium</a></li>
-            <li><a href="#matches" id="tab-matches">Matches</a></li>
+            <li><a href="stadium.html" id="tab-stadium">Stadium</a></li>
+            <li><a href="matches.html" id="tab-matches">Matches</a></li>
             <li><a href="scheduler.html" id="tab-scheduler">Scheduler</a></li>
             <li><a href="watchlist.html" id="tab-watchlist">Watchlist</a></li>
+            <li><a href="reports.html" id="tab-reports">Reports</a></li>
         </ul>
+        <div class="auth-area" id="auth-area"></div>
     </nav>
 
     <!-- Central Logo -->
@@ -34,9 +34,12 @@
         <img src="logo.png" alt="FIFA World Cup 2026 Logo">
     </div>
 
-    <!-- Navigation -->
-    <script src="config.js"></script>
-    <script src="nav.js"></script>
+    <!-- Scripts -->
+    <script src="js/api.js"></script>
+    <script src="js/nav.js"></script>
+    <script>
+        if (!API.isLoggedIn()) window.location.href = 'index.html';
+    </script>
 </body>
 
 </html>

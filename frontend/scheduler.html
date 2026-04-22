@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scheduler — FIFA World Cup 2026</title>
+    <meta name="description" content="Browse and add World Cup 2026 matches to your personal watchlist.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/global.css">
+    <link rel="stylesheet" href="css/scheduler.css">
+</head>
+
+<body>
+    <nav id="main-nav">
+        <a href="home.html" class="nav-brand" id="tab-wcs">WCS</a>
+        <span class="fav-display" id="fav-display"></span>
+        <ul class="nav-links">
+            <li><a href="team.html" id="tab-teams">Teams</a></li>
+            <li><a href="stadium.html" id="tab-stadium">Stadium</a></li>
+            <li><a href="matches.html" id="tab-matches">Matches</a></li>
+            <li><a href="scheduler.html" id="tab-scheduler">Scheduler</a></li>
+            <li><a href="watchlist.html" id="tab-watchlist">Watchlist</a></li>
+            <li><a href="reports.html" id="tab-reports">Reports</a></li>
+        </ul>
+        <div class="auth-area" id="auth-area"></div>
+    </nav>
+
+    <main class="page-content">
+        <h1 class="page-title">Match Scheduler</h1>
+
+        <div id="loading" class="loading-spinner">
+            <div class="spinner"></div>
+            <p>Loading matches...</p>
+        </div>
+        <div id="error" class="error-msg" style="display:none;">
+            <p>⚠ Failed to load matches. Please try again.</p>
+        </div>
+        <div id="match-list" class="match-list" style="display:none;"></div>
+    </main>
+
+    <script src="js/api.js"></script>
+    <script src="js/nav.js"></script>
+    <script>
+        if (!API.isLoggedIn()) window.location.href = 'index.html';
+
+        function fmtDate(d) {
+            if (!d) return '—';
+            const dt = new Date(d + 'T00:00:00');
+            return dt.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+        }
+        function fmtTime(t) {
+            if (!t) return '';
+            const [h, m] = t.split(':');
+            const hr = parseInt(h); const ap = hr >= 12 ? 'PM' : 'AM';
+            return `${hr % 12 || 12}:${m} ${ap}`;
+        }
+
+        async function addToWatchlist(matchid, btn) {
+            btn.disabled = true;
+            btn.textContent = 'Adding...';
+            try {
+                await API.post('/api/watchlist', { matchid });
+                btn.textContent = '✓ Added';
+                btn.classList.add('added');
+            } catch (err) {
+                if (err.message.includes('already')) {
+                    btn.textContent = '✓ Added';
+                    btn.classList.add('added');
+                } else {
+                    console.error('Error adding to watchlist:', err);
+                    btn.textContent = 'Error';
+                    setTimeout(() => { btn.textContent = '+ Add to Watchlist'; btn.disabled = false; }, 2000);
+                }
+            }
+        }
+
+        async function loadScheduler() {
+            const loading = document.getElementById('loading');
+            const error = document.getElementById('error');
+            const matchList = document.getElementById('match-list');
+
+            try {
+                const [matches, watchlist] = await Promise.all([
+                    API.get('/api/matches'),
+                    API.get('/api/watchlist')
+                ]);
+
+                const watchlistMatchIds = new Set(watchlist.map(w => w.matchid));
+
+                matches.forEach(match => {
+                    const card = document.createElement('div');
+                    card.classList.add('match-card');
+
+                    const team1 = match.team1name || `Team ${match.team1id}`;
+                    const team2 = match.team2name || `Team ${match.team2id}`;
+                    const alreadyAdded = watchlistMatchIds.has(match.matchid);
+
+                    card.innerHTML = `
+                        <div class="match-teams">
+                            <span class="team-name">${team1}</span>
+                            <span class="vs">vs</span>
+                            <span class="team-name">${team2}</span>
+                        </div>
+                        <div class="match-details">
+                            ${match.stagename ? `<span class="match-group">${match.stagename}</span>` : ''}
+                            <span class="match-date">${fmtDate(match.matchdate)}</span>
+                            <span class="match-time">${fmtTime(match.matchtime)}</span>
+                            ${match.venuename ? `<span class="match-venue">📍 ${match.venuename}</span>` : ''}
+                        </div>
+                    `;
+
+                    const btn = document.createElement('button');
+                    btn.classList.add('btn-add');
+                    if (alreadyAdded) {
+                        btn.textContent = '✓ Added';
+                        btn.classList.add('added');
+                        btn.disabled = true;
+                    } else {
+                        btn.textContent = '+ Add to Watchlist';
+                        btn.addEventListener('click', () => addToWatchlist(match.matchid, btn));
+                    }
+
+                    card.appendChild(btn);
+                    matchList.appendChild(card);
+                });
+
+                loading.style.display = 'none';
+                matchList.style.display = 'flex';
+            } catch (err) {
+                console.error('Error loading scheduler:', err);
+                loading.style.display = 'none';
+                error.style.display = 'block';
+            }
+        }
+
+        loadScheduler();
+    </script>
+</body>
+
+</html>

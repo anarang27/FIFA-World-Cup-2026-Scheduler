@@ -8,102 +8,77 @@
     <meta name="description" content="Your personal World Cup 2026 match watchlist.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@400;600;800&display=swap"
-        rel="stylesheet">
-    <link rel="stylesheet" href="watchlist.css">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/global.css">
+    <link rel="stylesheet" href="css/watchlist.css">
 </head>
 
 <body>
-
-    <!-- Navigation Bar -->
     <nav id="main-nav">
         <a href="home.html" class="nav-brand" id="tab-wcs">WCS</a>
         <span class="fav-display" id="fav-display"></span>
         <ul class="nav-links">
             <li><a href="team.html" id="tab-teams">Teams</a></li>
-            <li><a href="#stadium" id="tab-stadium">Stadium</a></li>
-            <li><a href="#matches" id="tab-matches">Matches</a></li>
+            <li><a href="stadium.html" id="tab-stadium">Stadium</a></li>
+            <li><a href="matches.html" id="tab-matches">Matches</a></li>
             <li><a href="scheduler.html" id="tab-scheduler">Scheduler</a></li>
-            <li><a href="watchlist.html" id="tab-watchlist" class="active">Watchlist</a></li>
+            <li><a href="watchlist.html" id="tab-watchlist">Watchlist</a></li>
+            <li><a href="reports.html" id="tab-reports">Reports</a></li>
         </ul>
+        <div class="auth-area" id="auth-area"></div>
     </nav>
 
-    <!-- Page Content -->
     <main class="page-content">
         <h1 class="page-title">My Watchlist</h1>
 
-        <!-- Loading State -->
         <div id="loading" class="loading-spinner">
             <div class="spinner"></div>
             <p>Loading watchlist...</p>
         </div>
-
-        <!-- Error State -->
         <div id="error" class="error-msg" style="display:none;">
-            <p>⚠ Failed to load watchlist. Please try again.</p>
+            <p>⚠ Failed to load watchlist.</p>
         </div>
-
-        <!-- Empty State -->
         <div id="empty" class="empty-state" style="display:none;">
             <p>Your watchlist is empty.</p>
             <a href="scheduler.html" class="btn-browse">Browse Matches</a>
         </div>
-
-        <!-- Watchlist Items -->
-        <div id="watchlist-items" class="match-list" style="display:none;">
-            <!-- Cards inserted by JS -->
-        </div>
+        <div id="watchlist-items" class="match-list" style="display:none;"></div>
     </main>
 
-    <!-- Scripts -->
-    <script src="config.js"></script>
-    <script src="nav.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/nav.js"></script>
     <script>
-        function sbHeaders(contentType) {
-            const h = {
-                'apikey': SUPABASE_ANON_KEY,
-                'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
-            };
-            if (contentType) {
-                h['Content-Type'] = 'application/json';
-                h['Prefer'] = 'return=minimal';
-            }
-            return h;
+        if (!API.isLoggedIn()) window.location.href = 'index.html';
+
+        function fmtDate(d) {
+            if (!d) return '—';
+            const dt = new Date(d + 'T00:00:00');
+            return dt.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+        }
+        function fmtTime(t) {
+            if (!t) return '';
+            const [h, m] = t.split(':');
+            const hr = parseInt(h); const ap = hr >= 12 ? 'PM' : 'AM';
+            return `${hr % 12 || 12}:${m} ${ap}`;
         }
 
-        function fmtDate(dateStr) {
-            const d = new Date(dateStr + 'T00:00:00');
-            return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
-        }
-
-        // Remove match from Watchlist by its Match
-        async function removeFromWatchlist(matchLabel, cardEl) {
+        async function removeFromWatchlist(itemid, cardEl) {
             try {
-                const res = await fetch(`${SUPABASE_URL}/rest/v1/Watchlist?Match=eq.${encodeURIComponent(matchLabel)}`, {
-                    method: 'DELETE',
-                    headers: sbHeaders(true)
-                });
-
-                if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
-                // Animate removal
+                await API.delete(`/api/watchlist/${itemid}`);
                 cardEl.style.opacity = '0';
                 cardEl.style.transform = 'translateX(40px)';
                 setTimeout(() => {
                     cardEl.remove();
-                    const remaining = document.querySelectorAll('.match-card');
-                    if (remaining.length === 0) {
+                    if (document.querySelectorAll('.match-card').length === 0) {
                         document.getElementById('watchlist-items').style.display = 'none';
                         document.getElementById('empty').style.display = 'block';
                     }
                 }, 300);
-
             } catch (err) {
                 console.error('Error removing from watchlist:', err);
             }
         }
 
-        // Main loader
         async function loadWatchlist() {
             const loading = document.getElementById('loading');
             const error = document.getElementById('error');
@@ -111,11 +86,7 @@
             const watchlistItems = document.getElementById('watchlist-items');
 
             try {
-                const res = await fetch(`${SUPABASE_URL}/rest/v1/Watchlist?select=*&order=Date.asc`, {
-                    headers: sbHeaders()
-                });
-                if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                const items = await res.json();
+                const items = await API.get('/api/watchlist');
 
                 loading.style.display = 'none';
 
@@ -128,34 +99,29 @@
                     const card = document.createElement('div');
                     card.classList.add('match-card');
 
-                    // Match column stores "Team1 vs Team2"
-                    const teams = item.Match.split(' vs ');
-                    const team1 = teams[0] || item.Match;
-                    const team2 = teams[1] || '';
-
                     card.innerHTML = `
                         <div class="match-teams">
-                            <span class="team-name">${team1}</span>
-                            ${team2 ? '<span class="vs">vs</span>' : ''}
-                            ${team2 ? `<span class="team-name">${team2}</span>` : ''}
+                            <span class="team-name">${item.team1name}</span>
+                            <span class="vs">vs</span>
+                            <span class="team-name">${item.team2name}</span>
                         </div>
                         <div class="match-details">
-                            <span class="match-date">${fmtDate(item.Date)}</span>
-                            ${item.City ? `<span class="match-city">${item.City}</span>` : ''}
+                            <span class="match-date">${fmtDate(item.matchdate)}</span>
+                            ${item.matchtime ? `<span class="match-time">${fmtTime(item.matchtime)}</span>` : ''}
+                            ${item.venuename ? `<span class="match-venue">📍 ${item.venuename}</span>` : ''}
                         </div>
                     `;
 
                     const btn = document.createElement('button');
                     btn.classList.add('btn-remove');
                     btn.textContent = '✕ Remove';
-                    btn.addEventListener('click', () => removeFromWatchlist(item.Match, card));
+                    btn.addEventListener('click', () => removeFromWatchlist(item.itineraryitemid, card));
 
                     card.appendChild(btn);
                     watchlistItems.appendChild(card);
                 });
 
                 watchlistItems.style.display = 'flex';
-
             } catch (err) {
                 console.error('Error loading watchlist:', err);
                 loading.style.display = 'none';
