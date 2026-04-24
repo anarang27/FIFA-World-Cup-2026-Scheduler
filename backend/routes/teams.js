@@ -22,17 +22,17 @@ router.get('/', async (req, res) => {
     }
 });
 
-/* ── GET /api/teams/favorite — get user's favorite ── */
-router.get('/favorite', requireAuth, async (req, res) => {
+/* ── GET /api/teams/favorite — get the favorited team ── */
+router.get('/favorite', async (req, res) => {
     try {
         const { data, error } = await supabase
-            .from('userfavorite')
-            .select('teamid')
-            .eq('userid', req.user.userid)
+            .from('team')
+            .select('team_id')
+            .eq('favorite', true)
             .limit(1);
 
         if (error) throw error;
-        res.json(data && data.length > 0 ? data[0] : null);
+        res.json(data && data.length > 0 ? { teamid: data[0].team_id } : null);
     } catch (err) {
         console.error('Get favorite error:', err);
         res.status(500).json({ error: 'Failed to fetch favorite' });
@@ -43,19 +43,19 @@ router.get('/favorite', requireAuth, async (req, res) => {
 router.post('/favorite', requireAuth, async (req, res) => {
     try {
         const { teamid } = req.body;
-        const userid = req.user.userid;
 
-        // Remove existing favorite
+        // Clear all favorites first
         await supabase
-            .from('userfavorite')
-            .delete()
-            .eq('userid', userid);
+            .from('team')
+            .update({ favorite: null })
+            .eq('favorite', true);
 
         // If teamid provided, set new favorite
         if (teamid) {
             const { error } = await supabase
-                .from('userfavorite')
-                .insert({ userid, teamid });
+                .from('team')
+                .update({ favorite: true })
+                .eq('team_id', teamid);
 
             if (error) throw error;
         }
