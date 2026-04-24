@@ -104,12 +104,13 @@
             const tbody = document.getElementById('teams-body');
 
             try {
-                const [teams, fav] = await Promise.all([
-                    API.get('/api/teams'),
-                    API.get('/api/teams/favorite')
-                ]);
+                const teams = await API.get('/api/teams');
 
-                currentFavoriteTeamId = fav ? fav.teamid : null;
+                // Favorite is optional — don't block teams if it fails
+                try {
+                    const fav = await API.get('/api/teams/favorite');
+                    currentFavoriteTeamId = fav ? fav.teamid : null;
+                } catch { currentFavoriteTeamId = null; }
 
                 teams.forEach(team => {
                     const tr = document.createElement('tr');
