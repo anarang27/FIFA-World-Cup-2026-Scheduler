@@ -104,10 +104,14 @@
             const tbody = document.getElementById('teams-body');
 
             try {
-                const [teams, fav] = await Promise.all([
-                    API.get('/api/teams'),
-                    API.get('/api/teams/favorite')
-                ]);
+                const teams = await API.get('/api/teams');
+
+                // Fetch favorite separately so a 401 doesn't break team loading
+                let fav = null;
+                try {
+                    const favRes = await fetch('/api/teams/favorite', { headers: API.headers() });
+                    if (favRes.ok) fav = await favRes.json();
+                } catch (_) { /* user may not be fully authenticated yet */ }
 
                 currentFavoriteTeamId = fav ? fav.teamid : null;
 

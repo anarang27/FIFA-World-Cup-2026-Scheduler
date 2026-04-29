@@ -150,7 +150,7 @@
                         <h3 class="group-name">${groupName}</h3>
                         <ul class="group-teams">
                             ${teams.sort((a,b) => a.ranking - b.ranking).map(t =>
-                                `<li><span class="team-rank">#${t.ranking}</span> ${t.team_name}</li>`
+                                `<li>${t.team_name}</li>`
                             ).join('')}
                         </ul>
                     `;
