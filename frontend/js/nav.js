@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (authArea && user) {
         authArea.innerHTML = `
             <span class="user-greeting">Hi, ${user.firstname || user.username}</span>
-            ${user.role === 'admin' ? '<a href="admin.html" class="nav-admin-link">Admin</a>' : ''}
+            ${user.role?.toLowerCase() === 'admin' ? '<a href="admin.html" class="nav-admin-link">Admin</a>' : ''}
             <button id="btn-logout" class="btn-logout">Logout</button>
         `;
         document.getElementById('btn-logout').addEventListener('click', () => {
