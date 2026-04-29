@@ -88,7 +88,7 @@
         if (!API.isLoggedIn()) { window.location.href = 'index.html'; }
 
         const user = API.getUser();
-        if (user && user.role === 'admin') {
+        if (user && user.role?.toLowerCase() === 'admin') {
             document.getElementById('admin-content').style.display = 'block';
             loadUsers();
         } else {
