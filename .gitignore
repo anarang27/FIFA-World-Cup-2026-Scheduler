@@ -13,4 +13,3 @@ dist/
 Thumbs.db
 backend/.env.example
 backend/.env.example
-backend/.env.example
