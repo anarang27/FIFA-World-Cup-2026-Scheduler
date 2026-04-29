@@ -12,3 +12,4 @@ dist/
 .DS_Store
 Thumbs.db
 backend/.env.example
+backend/.env.example
